@@ -1,20 +1,20 @@
-# agy CLI patcher
+# Точечный патчер Antigravity CLI
 
-Builds an ad-hoc signed copy of one Google-signed Antigravity CLI `1.5.3` build for Apple Silicon. The patch changes two bytes in the protobuf descriptor for `ineligible_tiers` before re-signing. The CLI continues to use its standard proxy settings.
+Скрипт создаёт локально подписанную копию Antigravity CLI `1.5.3` для Apple Silicon. Перед переподписью он меняет два байта в protobuf-дескрипторе `ineligible_tiers`. CLI продолжает использовать штатные настройки прокси.
 
-The script checks the input SHA-256 and Google code signature, requires exactly one matching descriptor, and creates a new executable. It refuses to overwrite an existing output.
+Скрипт проверяет SHA-256 и подпись Google у исходной сборки, ищет ровно одно совпадение дескриптора и записывает результат в новый файл. Если файл по указанному пути уже есть, скрипт сообщает об ошибке.
 
-## Build and test
+## Сборка и проверка
 
-Use native Python 3 on Apple Silicon macOS. Pass the original Google-signed executable as the input.
+На Mac с Apple Silicon запустите скрипт через нативный Python 3 и передайте ему оригинальный `agy` с подписью Google.
 
 ```sh
-python3 patch_agy.py /path/to/original/agy ./agy-patched
-AGY_CLI_DISABLE_AUTO_UPDATE=true ./agy-patched --model gemini-4-argon-high -p 'Reply with exactly OK.'
+python3 patch_agy.py /путь/к/оригиналу/agy ./agy-patched
+AGY_CLI_DISABLE_AUTO_UPDATE=true ./agy-patched --model gemini-4-argon-high -p 'Ответь только словом OK.'
 ```
 
-## Install and roll back
+## Установка и откат
 
-Keep the Google-signed binary as a backup. To install, create the patched copy beside the installed `agy` and rename it over that file. To roll back, copy the signed backup to a fresh file in the same directory and rename it over the patched binary. Future CLI updates may replace the patch.
+Сохраните исполняемый файл с подписью Google для отката. Чтобы установить патч, создайте пропатченную копию рядом с установленным `agy` и переименуйте её в `agy` с заменой файла. Для отката скопируйте подписанный оригинал в новый файл в том же каталоге и переименуйте его в `agy` с заменой. Обновление CLI может перезаписать патч.
 
-The general binary-patching approach was inspired by [Antigravity Unlocker](https://github.com/confeden/Antigravity/releases/tag/v2.29.0).
+Идея правки бинарника основана на подходе [Antigravity Unlocker](https://github.com/confeden/Antigravity/releases/tag/v2.29.0).
