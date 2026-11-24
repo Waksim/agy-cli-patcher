@@ -9,6 +9,7 @@ import platform
 import subprocess
 import sys
 import tempfile
+from typing import Mapping
 
 
 ORIGINAL_SHA256 = "5e4b545bff4a83a93354fc50c54631cf3e8cd02e1a469087af00929f3fdc4d51"
@@ -50,18 +51,27 @@ def codesign(error_message: str, *arguments: str) -> None:
         raise ValueError(f"{error_message} (код codesign {result.returncode})")
 
 
-def build_copy(source: Path, output: Path) -> None:
+def build_copy(
+    source: Path,
+    output: Path,
+    *,
+    supported_sha256: Mapping[str, str] = SUPPORTED_SHA256,
+    google_signature: str = GOOGLE_SIGNATURE,
+    source_description: str = "agy 1.5.3 или 1.5.16",
+) -> None:
     if sys.platform != "darwin" or platform.machine() != "arm64":
         raise ValueError("Запустите скрипт через нативный Python на Mac с Apple Silicon")
     if output.exists() or output.is_symlink():
         raise FileExistsError(f"Выходной файл уже существует: {output}")
 
     original = source.read_bytes()
-    if hashlib.sha256(original).hexdigest() not in SUPPORTED_SHA256:
-        raise ValueError("Требуется оригинальный agy 1.5.3 или 1.5.16 для Apple Silicon с подписью Google")
+    if hashlib.sha256(original).hexdigest() not in supported_sha256:
+        raise ValueError(
+            f"Требуется оригинальный {source_description} для Apple Silicon с подписью Google"
+        )
     codesign(
         "Не удалось проверить подпись Google у исходного файла",
-        "--verify", "--strict", f"-R={GOOGLE_SIGNATURE}", str(source),
+        "--verify", "--strict", f"-R={google_signature}", str(source),
     )
     if original.count(TIER_DESCRIPTOR) != 1:
         raise ValueError("Требуется ровно одно совпадение дескриптора ineligible_tiers")
