@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Создаёт пропатченную копию Antigravity CLI 1.5.3 для Apple Silicon."""
+"""Создаёт пропатченную копию Antigravity CLI 1.5.3 или 1.5.16 для Apple Silicon."""
 
 import argparse
 import hashlib
@@ -12,6 +12,10 @@ import tempfile
 
 
 ORIGINAL_SHA256 = "5e4b545bff4a83a93354fc50c54631cf3e8cd02e1a469087af00929f3fdc4d51"
+SUPPORTED_SHA256 = {
+    ORIGINAL_SHA256: "1.5.3",
+    "b746bd68eb150f594e53af1e5577c8b101eaf33bd44ca10ac683af90e0630cf3": "1.5.16",
+}
 GOOGLE_SIGNATURE = 'identifier "cli" and anchor apple generic and certificate leaf[subject.OU] = "EQHXZ8M8AV"'
 
 # Поле № 5 со списком сообщений IneligibleTier и именами в protobuf и JSON.
@@ -53,8 +57,8 @@ def build_copy(source: Path, output: Path) -> None:
         raise FileExistsError(f"Выходной файл уже существует: {output}")
 
     original = source.read_bytes()
-    if hashlib.sha256(original).hexdigest() != ORIGINAL_SHA256:
-        raise ValueError("Требуется оригинальный agy 1.5.3 для Apple Silicon с подписью Google")
+    if hashlib.sha256(original).hexdigest() not in SUPPORTED_SHA256:
+        raise ValueError("Требуется оригинальный agy 1.5.3 или 1.5.16 для Apple Silicon с подписью Google")
     codesign(
         "Не удалось проверить подпись Google у исходного файла",
         "--verify", "--strict", f"-R={GOOGLE_SIGNATURE}", str(source),
