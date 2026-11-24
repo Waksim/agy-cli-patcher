@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Создаёт пропатченную копию Antigravity CLI 1.5.3 для Apple Silicon."""
+"""Создаёт пропатченную копию Antigravity CLI 1.5.3 или 1.5.16 для Apple Silicon."""
 
 import argparse
 import hashlib
@@ -9,9 +9,14 @@ import platform
 import subprocess
 import sys
 import tempfile
+from typing import Mapping
 
 
 ORIGINAL_SHA256 = "5e4b545bff4a83a93354fc50c54631cf3e8cd02e1a469087af00929f3fdc4d51"
+SUPPORTED_SHA256 = {
+    ORIGINAL_SHA256: "1.5.3",
+    "b746bd68eb150f594e53af1e5577c8b101eaf33bd44ca10ac683af90e0630cf3": "1.5.16",
+}
 GOOGLE_SIGNATURE = 'identifier "cli" and anchor apple generic and certificate leaf[subject.OU] = "EQHXZ8M8AV"'
 
 # Поле № 5 со списком сообщений IneligibleTier и именами в protobuf и JSON.
@@ -50,9 +55,9 @@ def build_copy(
     source: Path,
     output: Path,
     *,
-    original_sha256: str = ORIGINAL_SHA256,
+    supported_sha256: Mapping[str, str] = SUPPORTED_SHA256,
     google_signature: str = GOOGLE_SIGNATURE,
-    source_description: str = "agy 1.5.3",
+    source_description: str = "agy 1.5.3 или 1.5.16",
 ) -> None:
     if sys.platform != "darwin" or platform.machine() != "arm64":
         raise ValueError("Запустите скрипт через нативный Python на Mac с Apple Silicon")
@@ -60,7 +65,7 @@ def build_copy(
         raise FileExistsError(f"Выходной файл уже существует: {output}")
 
     original = source.read_bytes()
-    if hashlib.sha256(original).hexdigest() != original_sha256:
+    if hashlib.sha256(original).hexdigest() not in supported_sha256:
         raise ValueError(
             f"Требуется оригинальный {source_description} для Apple Silicon с подписью Google"
         )

@@ -22,7 +22,7 @@ def main() -> None:
         build_copy(
             args.source,
             args.output,
-            original_sha256=ORIGINAL_SHA256,
+            supported_sha256={ORIGINAL_SHA256: "2.35.0"},
             google_signature=GOOGLE_SIGNATURE,
             source_description="Language Server Antigravity App 2.35.0",
         )
