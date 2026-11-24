@@ -46,18 +46,27 @@ def codesign(error_message: str, *arguments: str) -> None:
         raise ValueError(f"{error_message} (код codesign {result.returncode})")
 
 
-def build_copy(source: Path, output: Path) -> None:
+def build_copy(
+    source: Path,
+    output: Path,
+    *,
+    original_sha256: str = ORIGINAL_SHA256,
+    google_signature: str = GOOGLE_SIGNATURE,
+    source_description: str = "agy 1.5.3",
+) -> None:
     if sys.platform != "darwin" or platform.machine() != "arm64":
         raise ValueError("Запустите скрипт через нативный Python на Mac с Apple Silicon")
     if output.exists() or output.is_symlink():
         raise FileExistsError(f"Выходной файл уже существует: {output}")
 
     original = source.read_bytes()
-    if hashlib.sha256(original).hexdigest() != ORIGINAL_SHA256:
-        raise ValueError("Требуется оригинальный agy 1.5.3 для Apple Silicon с подписью Google")
+    if hashlib.sha256(original).hexdigest() != original_sha256:
+        raise ValueError(
+            f"Требуется оригинальный {source_description} для Apple Silicon с подписью Google"
+        )
     codesign(
         "Не удалось проверить подпись Google у исходного файла",
-        "--verify", "--strict", f"-R={GOOGLE_SIGNATURE}", str(source),
+        "--verify", "--strict", f"-R={google_signature}", str(source),
     )
     if original.count(TIER_DESCRIPTOR) != 1:
         raise ValueError("Требуется ровно одно совпадение дескриптора ineligible_tiers")
